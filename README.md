@@ -9,7 +9,7 @@ An adrenaline-fueled endless driver for Android, built with Unity.
 <img src="GamePlayGif.gif" alt="Highway Overtake Gameplay GIF" width="80%">
 </p>
 <p align="center">
-<em>Short gameplayy.</em>
+<em>Short gameplay</em>
 </p>
 
 <div align="center">
