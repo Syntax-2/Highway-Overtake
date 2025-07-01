@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac5bc36e645d474ca26293543138a3d, type: 3}
+  m_Name: FordTruckUpgrades
+  m_EditorClassIdentifier: 
+  carName: Ford Truck
+  engineUpgrades:
+  - cost: 500
+    motorTorque_Increase: 200
+    maxSpeed_Increase: 200
+    accelerationRate_Increase: 50
+    brakeTorque_Increase: 10
+  - cost: 500
+    motorTorque_Increase: 200
+    maxSpeed_Increase: 200
+    accelerationRate_Increase: 50
+    brakeTorque_Increase: 10
+  - cost: 500
+    motorTorque_Increase: 200
+    maxSpeed_Increase: 200
+    accelerationRate_Increase: 50
+    brakeTorque_Increase: 10
+  turboUpgrades:
+  - cost: 600
+    motorTorque_Increase: 100
+    maxSpeed_Increase: 30
+    accelerationRate_Increase: 300
+    brakeTorque_Increase: 20
+  - cost: 600
+    motorTorque_Increase: 100
+    maxSpeed_Increase: 30
+    accelerationRate_Increase: 300
+    brakeTorque_Increase: 20
+  - cost: 600
+    motorTorque_Increase: 100
+    maxSpeed_Increase: 30
+    accelerationRate_Increase: 300
+    brakeTorque_Increase: 20
+  brakeUpgrades:
+  - cost: 450
+    motorTorque_Increase: 0
+    maxSpeed_Increase: 0
+    accelerationRate_Increase: 50
+    brakeTorque_Increase: 100
+  - cost: 450
+    motorTorque_Increase: 0
+    maxSpeed_Increase: 0
+    accelerationRate_Increase: 50
+    brakeTorque_Increase: 100
+  - cost: 450
+    motorTorque_Increase: 0
+    maxSpeed_Increase: 0
+    accelerationRate_Increase: 50
+    brakeTorque_Increase: 100

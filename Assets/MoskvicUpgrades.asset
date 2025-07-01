@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac5bc36e645d474ca26293543138a3d, type: 3}
+  m_Name: MoskvicUpgrades
+  m_EditorClassIdentifier: 
+  carName: Moskvic
+  engineUpgrades:
+  - cost: 400
+    motorTorque_Increase: 300
+    maxSpeed_Increase: 30
+    accelerationRate_Increase: 500
+    brakeTorque_Increase: 50
+  - cost: 600
+    motorTorque_Increase: 400
+    maxSpeed_Increase: 30
+    accelerationRate_Increase: 500
+    brakeTorque_Increase: 50
+  - cost: 400
+    motorTorque_Increase: 300
+    maxSpeed_Increase: 30
+    accelerationRate_Increase: 500
+    brakeTorque_Increase: 50
+  turboUpgrades:
+  - cost: 400
+    motorTorque_Increase: 50
+    maxSpeed_Increase: 10
+    accelerationRate_Increase: 1000
+    brakeTorque_Increase: 50
+  - cost: 400
+    motorTorque_Increase: 50
+    maxSpeed_Increase: 10
+    accelerationRate_Increase: 1000
+    brakeTorque_Increase: 50
+  - cost: 400
+    motorTorque_Increase: 50
+    maxSpeed_Increase: 10
+    accelerationRate_Increase: 1000
+    brakeTorque_Increase: 50
+  brakeUpgrades:
+  - cost: 300
+    motorTorque_Increase: 0
+    maxSpeed_Increase: 0
+    accelerationRate_Increase: 0
+    brakeTorque_Increase: 250
+  - cost: 300
+    motorTorque_Increase: 0
+    maxSpeed_Increase: 0
+    accelerationRate_Increase: 0
+    brakeTorque_Increase: 250
+  - cost: 300
+    motorTorque_Increase: 0
+    maxSpeed_Increase: 0
+    accelerationRate_Increase: 0
+    brakeTorque_Increase: 250
