@@ -12,11 +12,8 @@ An adrenaline-fueled endless driver for Android, built with Unity.
 <em>Short gameplay</em>
 </p>
 
-<div align="center">
-<a href="https://www.google.com/search?q=https://play.google.com/store/apps/details%3Fid%3Dcom.yourcompany.highwayovertake">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/Google_Play-Download-414141%3Fstyle%3Dfor-the-badge%26logo%3Dgoogle-play" alt="Download on Google Play"/>
-</a>
-</div>
+
+
 
 Highway Overtake is a complete endless driver where the goal is to survive as long as possible on a busy highway. Weave through traffic, collect coins, purchase new cars and maps, and upgrade your ride to dominate the road. This project was built from the ground up to demonstrate a full game loop, from dynamic UI and persistent data management to juicy, satisfying gameplay effects.
 
