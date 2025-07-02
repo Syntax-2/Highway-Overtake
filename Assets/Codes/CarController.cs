@@ -71,6 +71,8 @@ public class CarController : MonoBehaviour
     private Image _boostIndicatorLight;
     private float _boostEffectIntensity = 0f;
 
+    private float _distanceDrivenThisRun = 0f;
+
 
     [Header("Collision Settings")]
     public float crashSpeedThreshold = 10.0f;
@@ -157,10 +159,14 @@ public class CarController : MonoBehaviour
     {
         if (rb.isKinematic) return;
 
-
+        
 
         float currentSpeedMPS = rb.linearVelocity.magnitude;
         _currentSpeedKPH = currentSpeedMPS * 3.6f;
+
+       
+        _distanceDrivenThisRun += currentSpeedMPS * Time.fixedDeltaTime;
+       
 
         if (speedoText != null)
         {
@@ -236,7 +242,13 @@ public class CarController : MonoBehaviour
         }
     }
 
-    
+
+    public float GetDistanceThisRun()
+    {
+        return _distanceDrivenThisRun;
+    }
+
+
 
     public void ResetCarState()
     {
@@ -245,6 +257,9 @@ public class CarController : MonoBehaviour
             rb.isKinematic = true;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
+
+            _distanceDrivenThisRun = 0f;
+
         }
     }
 
@@ -274,6 +289,13 @@ public class CarController : MonoBehaviour
 
         _speedBoostCoroutine = StartCoroutine(SpeedBoostDurationCoroutine(duration));
     }
+
+
+    
+
+    
+
+
 
     private IEnumerator SpeedBoostDurationCoroutine(float duration)
     {

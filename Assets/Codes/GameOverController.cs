@@ -142,6 +142,23 @@ public class GameOverController : MonoBehaviour
             Debug.LogWarning("GameOverController: Sound Effects AudioSource not assigned.", this);
         }
 
+        // Get the active car controller instance
+        CarController activeCar = PlayerCarManager.Instance.CurrentPlayerCarController;
+        if (activeCar == null) return;
+
+        
+       
+        float distanceInMeters = activeCar.GetDistanceThisRun();
+
+        if (GameDataManager.Instance != null)
+        {      
+            GameDataManager.Instance.AddToTotalDistance(distanceInMeters);
+        }
+
+
+
+        GameDataManager.Instance.UpdateBestScore(ScoreManager._score);
+
         // Reset score
         if (ScoreManager.Instance != null)
         {
