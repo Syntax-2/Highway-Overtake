@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic; // Not strictly needed here but good practice if you expand
+using System.Collections.Generic;
 
 public class GameOverController : MonoBehaviour
 {
@@ -10,18 +10,17 @@ public class GameOverController : MonoBehaviour
     public GameObject controlsUI;
 
     [Header("Scene References")]
-    // *** REMOVED: public Transform playerTransform; ***
-    public Vector3 respawnLocation = Vector3.zero; // Default respawn location
-    public Quaternion respawnRotation = Quaternion.identity; // Default respawn rotation
-    public AudioSource soundeffects; // For restart sound
+    public Vector3 respawnLocation = Vector3.zero;
+    public Quaternion respawnRotation = Quaternion.identity;
+    public AudioSource soundeffects;
     public GameObject driversCamera;
-    public GameObject MeniuCamera; // Typo? Consider mainMenuCamera
-    public AICarSpawner spawner; // For cleaning AI cars
-    public GameObject effectsPrefab; // For crash effects
+    public GameObject mainMenuCamera; // Renamed from MeniuCamera
+    public GameObject effectsPrefab;
 
     // --- Private Variables ---
     private Transform _activePlayerCarTransform;
-    private Rigidbody _activePlayerCarRigidbody; // Optional: if you need to reset velocity
+    private Rigidbody _activePlayerCarRigidbody;
+    private AICarSpawner _spawner; // Reference is now private and found automatically
 
     void Start()
     {
@@ -31,25 +30,27 @@ public class GameOverController : MonoBehaviour
             GameOverScreen.SetActive(false);
         }
 
+        // --- MODIFIED: Find the AICarSpawner at runtime ---
+        // ** FIX: Explicitly specified UnityEngine.Object to resolve ambiguity **
+        _spawner = UnityEngine.Object.FindFirstObjectByType<AICarSpawner>();
+        if (_spawner == null)
+        {
+            Debug.LogWarning("GameOverController: AICarSpawner not found in the scene. The CleanAiCars function will not be called on restart.", this);
+        }
+        // --- END MODIFICATION ---
+
         // Subscribe to PlayerCarManager events and get initial car
         if (PlayerCarManager.Instance != null)
         {
             PlayerCarManager.Instance.OnPlayerCarChanged += HandleActivePlayerCarChanged;
-            // Get the initially selected car
             if (PlayerCarManager.Instance.CurrentPlayerCarGameObject != null)
             {
                 HandleActivePlayerCarChanged(PlayerCarManager.Instance.CurrentPlayerCarGameObject);
             }
-            else
-            {
-                Debug.LogWarning("GameOverController: PlayerCarManager has no active car on Start. Waiting for OnPlayerCarChanged event.", this);
-            }
         }
         else
         {
-            Debug.LogError("GameOverController: PlayerCarManager.Instance is null! Make sure PlayerCarManager is in the scene and initialized before GameOverController.", this);
-            // If this script is critical, you might disable it or parts of its functionality
-            // enabled = false;
+            Debug.LogError("GameOverController: PlayerCarManager.Instance is null! This script may not function correctly.", this);
         }
     }
 
@@ -67,12 +68,10 @@ public class GameOverController : MonoBehaviour
         if (newPlayerCar != null)
         {
             _activePlayerCarTransform = newPlayerCar.transform;
-            _activePlayerCarRigidbody = newPlayerCar.GetComponent<Rigidbody>(); // Get Rigidbody if present
-            Debug.Log($"GameOverController: Player car reference updated to '{newPlayerCar.name}'.", this);
+            _activePlayerCarRigidbody = newPlayerCar.GetComponent<Rigidbody>();
         }
         else
         {
-            Debug.LogWarning("GameOverController: Active player car reference became null.", this);
             _activePlayerCarTransform = null;
             _activePlayerCarRigidbody = null;
         }
@@ -85,24 +84,14 @@ public class GameOverController : MonoBehaviour
         if (_activePlayerCarTransform == null)
         {
             Debug.LogError("GameOverController: Cannot restart level, active player car transform is not set!", this);
-            // Attempt to re-fetch from PlayerCarManager as a fallback
-            if (PlayerCarManager.Instance != null && PlayerCarManager.Instance.CurrentPlayerCarGameObject != null)
-            {
-                HandleActivePlayerCarChanged(PlayerCarManager.Instance.CurrentPlayerCarGameObject);
-                if (_activePlayerCarTransform == null) return; // Still null, exit
-            }
-            else
-            {
-                Debug.LogError("GameOverController: PlayerCarManager or its current car is null. Cannot proceed with restart.");
-                return;
-            }
+            return;
         }
 
         // Reset player position and rotation
         _activePlayerCarTransform.position = respawnLocation;
-        _activePlayerCarTransform.rotation = respawnRotation; // Use defined respawnRotation
+        _activePlayerCarTransform.rotation = respawnRotation;
 
-        // Optional: Reset player's velocity and angular velocity if they have a Rigidbody
+        // Reset player's velocity
         if (_activePlayerCarRigidbody != null)
         {
             _activePlayerCarRigidbody.linearVelocity = Vector3.zero;
@@ -114,85 +103,48 @@ public class GameOverController : MonoBehaviour
         {
             effectsPrefab.SetActive(false);
         }
-        else
-        {
-            Debug.LogWarning("GameOverController: Effects Prefab not assigned.", this);
-        }
 
-        // Clean AI cars
-        if (spawner != null)
-        {
-            spawner.CleanAiCars();
-            // Consider re-initializing the spawner if needed, e.g., spawner.InitializeSpawning();
-        }
-        else
-        {
-            Debug.LogWarning("GameOverController: AICarSpawner (spawner) not assigned.", this);
-        }
+        // --- MODIFIED: Use the internal _spawner reference with a null check ---
+        // The ?. is a null-conditional operator. It will only call CleanAiCars() if _spawner is not null.
+        _spawner?.CleanAiCars();
+        // --- END MODIFICATION ---
 
-        
+        // Manage cameras
+        if (driversCamera != null) driversCamera.SetActive(false);
+        if (mainMenuCamera != null) mainMenuCamera.SetActive(false);
+
+        // Manage UI
+        if (controlsUI != null) controlsUI.SetActive(false);
+        if (GameOverScreen != null) GameOverScreen.SetActive(false);
 
         // Play sound effect
-        if (soundeffects != null)
-        {
-            soundeffects.Play();
-        }
-        else
-        {
-            Debug.LogWarning("GameOverController: Sound Effects AudioSource not assigned.", this);
-        }
+        soundeffects?.Play();
 
-        // Get the active car controller instance
+        // Get stats and update GameDataManager
         CarController activeCar = PlayerCarManager.Instance.CurrentPlayerCarController;
-        if (activeCar == null) return;
-
-        
-       
-        float distanceInMeters = activeCar.GetDistanceThisRun();
-
-        if (GameDataManager.Instance != null)
-        {      
+        if (activeCar != null && GameDataManager.Instance != null)
+        {
+            float distanceInMeters = activeCar.GetDistanceThisRun();
             GameDataManager.Instance.AddToTotalDistance(distanceInMeters);
+            GameDataManager.Instance.UpdateBestScore(ScoreManager._score);
         }
 
-
-
-        GameDataManager.Instance.UpdateBestScore(ScoreManager._score);
-
-        // Reset score
-        if (ScoreManager.Instance != null)
-        {
-            ScoreManager.Instance.ResetScore();
-        }
-        else
-        {
-            Debug.LogWarning("GameOverController: ScoreManager.Instance is null. Cannot reset score.", this);
-        }
+        // Reset score for the new run
+        ScoreManager.Instance?.ResetScore();
 
         // Resume game time if it was paused
         Time.timeScale = 1f;
-        if (PauseManager.IsGamePaused) // Assuming you have a PauseManager
-        {
-            PauseManager.Instance?.ResumeGame(); // Call resume if it exists
-        }
+        PauseManager.Instance?.ResumeGame();
 
         Debug.Log("Level Restarted.");
     }
 
-    public void BackToMeniu() // Typo? Consider BackToMenu
+    public void BackToMeniu()
     {
         Debug.Log("BackToMeniu called. Reloading current scene.");
-        // Ensure game time is normal before scene transitions
         Time.timeScale = 1f;
-        if (PauseManager.IsGamePaused)
-        {
-            PauseManager.Instance?.ResumeGame(); // Ensure game is unpaused
-        }
-        AudioListener.pause = false; // Ensure audio is unpaused
-
-        Scene scene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(scene.name); // Reloads the current active scene
-        // If your main menu is a different scene, use:
-        // SceneManager.LoadScene("YourMainMenuSceneName");
+        PauseManager.Instance?.ResumeGame();
+        AudioListener.pause = false;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

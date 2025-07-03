@@ -7358,8 +7358,7 @@ MonoBehaviour:
   respawnRotation: {x: 0, y: 0, z: 0, w: 1}
   soundeffects: {fileID: 1778900471}
   driversCamera: {fileID: 701740735}
-  MeniuCamera: {fileID: 316324661}
-  spawner: {fileID: 160228791}
+  mainMenuCamera: {fileID: 0}
   effectsPrefab: {fileID: 1852231128}
 --- !u!114 &1047860652
 MonoBehaviour:

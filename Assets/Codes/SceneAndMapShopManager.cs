@@ -13,19 +13,15 @@ public class SceneAndMapShopManager : MonoBehaviour
     public static SceneAndMapShopManager Instance { get; private set; }
 
     // --- STATIC VARIABLE to pass state between scenes ---
-    // This reliably tells the next scene which map index it should be.
-    public static int nextSceneIndexToLoad = -1; // -1 means no specific index is requested.
+    public static int nextSceneIndexToLoad = -1;
 
     [Header("Map Configuration")]
     [Tooltip("List of all MapData assets. The order of this list DEFINES the next/previous map loading order.")]
     public List<MapData> allMaps;
 
     [Header("UI References (Must be children of this GameObject)")]
-    [Tooltip("The main button for buying or selecting the map.")]
     public Button mainActionButton;
-    [Tooltip("The TextMeshPro text component on the main action button.")]
     public TextMeshProUGUI mainActionButtonText;
-    [Tooltip("The TextMeshPro text component to display the map's name.")]
     public TextMeshProUGUI mapNameText;
 
     // --- Private State ---
@@ -40,9 +36,29 @@ public class SceneAndMapShopManager : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject); // This makes this object and all its children persist.
+        DontDestroyOnLoad(gameObject);
         Debug.Log("[SceneAndMapShopManager] Instance set and will persist.");
     }
+
+    // --- FIX: Added Start() method back to add the button listener ---
+    private void Start()
+    {
+        if (mainActionButton != null)
+        {
+            // This line connects the button in the UI to our OnMainActionButtonClicked function.
+            mainActionButton.onClick.AddListener(OnMainActionButtonClicked);
+        }
+        else
+        {
+            Debug.LogError("[SceneAndMapShopManager] Main Action Button is not assigned in the Inspector!", this);
+        }
+
+        if (GameDataManager.Instance != null)
+        {
+            GameDataManager.Instance.OnMoneyChanged += HandleMoneyChanged;
+        }
+    }
+    // --- END FIX ---
 
     public void OnMapShopOpened()
     {
@@ -50,28 +66,17 @@ public class SceneAndMapShopManager : MonoBehaviour
         InitializeUIForCurrentScene();
     }
 
-
     public void OnMapShopClosed()
     {
         Debug.Log("[SceneAndMapShopManager] Map Shop Closed. Checking if revert is needed.");
         if (GameDataManager.Instance == null || CameraAndMenuManager.Instance == null) return;
 
-        // --- MODIFIED LOGIC: ALWAYS go to main menu view when closing ---
-        // First, set the desired state to be the main menu.
-        CameraAndMenuManager.Instance.ActivateMainMenuState();
-        // Save this intention so it will be applied after any potential scene load.
-        CameraAndMenuManager.Instance.SaveCurrentState();
-
         string equippedMapScene = GameDataManager.Instance.SelectedMapName;
         string currentScene = SceneManager.GetActiveScene().name;
 
-        // Check if we are currently previewing a map that is not our equipped one.
         if (equippedMapScene != currentScene)
         {
-            Debug.Log($"Reverting from '{currentScene}' to equipped map '{equippedMapScene}' and will show main menu.");
-
-            // We still need to load the correct equipped scene,
-            // but CameraAndMenuManager now knows to show the main menu once it loads.
+            Debug.Log($"Reverting from '{currentScene}' to equipped map '{equippedMapScene}'.");
             int equippedIndex = -1;
             for (int i = 0; i < allMaps.Count; i++)
             {
@@ -82,7 +87,6 @@ public class SceneAndMapShopManager : MonoBehaviour
                     break;
                 }
             }
-
             if (equippedIndex != -1)
             {
                 LoadSceneByName(equippedMapScene);
@@ -94,33 +98,24 @@ public class SceneAndMapShopManager : MonoBehaviour
         }
         else
         {
-            // If we are already on the equipped map, the ActivateMainMenuState() call from above
-            // has already switched the UI panel and camera. No scene change is needed.
-            Debug.Log("Already on equipped map. Switched to Main Menu view.");
+            Debug.Log("Already on equipped map. Switching to Main Menu view.");
+            CameraAndMenuManager.Instance?.ActivateMainMenuState();
         }
     }
 
     private void OnEnable()
     {
-        // Subscribe the OnSceneLoaded method to the sceneLoaded event
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDisable()
     {
-        // Unsubscribe to prevent errors when this object is destroyed
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    /// <summary>
-    /// Called automatically every time a new scene finishes loading.
-    /// This signature now correctly matches the UnityAction<Scene, LoadSceneMode> delegate.
-    /// </summary>
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         Debug.Log($"[SceneAndMapShopManager] Scene '{scene.name}' loaded. Initializing UI.");
-        // This initialization is now for the map selection UI, which will be inactive
-        // if CameraAndMenuManager has just activated the main menu. This is fine.
         InitializeUIForCurrentScene();
     }
 
@@ -152,21 +147,13 @@ public class SceneAndMapShopManager : MonoBehaviour
         }
     }
 
-
-    // --- Scene Loading Logic ---
-
     public void ShowNextMap()
     {
         if (allMaps.Count == 0 || GameDataManager.Instance == null) return;
         int currentMapIndex = GameDataManager.Instance.LastViewedMapIndex;
         int nextMapIndex = (currentMapIndex + 1) % allMaps.Count;
         nextSceneIndexToLoad = nextMapIndex;
-        string sceneToLoad = allMaps[nextMapIndex].sceneName;
-
-        // --- Important: Save the MAP SELECTION state before changing scenes ---
-        CameraAndMenuManager.Instance?.SaveCurrentState();
-
-        LoadSceneByName(sceneToLoad);
+        LoadSceneByName(allMaps[nextMapIndex].sceneName);
     }
 
     public void ShowPreviousMap()
@@ -175,12 +162,7 @@ public class SceneAndMapShopManager : MonoBehaviour
         int currentMapIndex = GameDataManager.Instance.LastViewedMapIndex;
         int previousMapIndex = (currentMapIndex - 1 + allMaps.Count) % allMaps.Count;
         nextSceneIndexToLoad = previousMapIndex;
-        string sceneToLoad = allMaps[previousMapIndex].sceneName;
-
-        // --- Important: Save the MAP SELECTION state before changing scenes ---
-        CameraAndMenuManager.Instance?.SaveCurrentState();
-
-        LoadSceneByName(sceneToLoad);
+        LoadSceneByName(allMaps[previousMapIndex].sceneName);
     }
 
     private void LoadSceneByName(string sceneName)
@@ -190,31 +172,13 @@ public class SceneAndMapShopManager : MonoBehaviour
         SceneManager.LoadScene(sceneName);
     }
 
-    // --- UI and Shop Logic ---
-
     public void UpdateUI()
     {
         if (_currentMapIndex == -1 || allMaps.Count <= _currentMapIndex || GameDataManager.Instance == null) return;
-
         MapData currentMap = allMaps[_currentMapIndex];
-
-        // --- FIX: Ensure we have valid data before proceeding ---
-        if (currentMap == null)
-        {
-            Debug.LogError($"[SceneAndMapShopManager] MapData at index {_currentMapIndex} is null. Aborting UI Update.");
-            return;
-        }
-
         bool isUnlocked = IsMapUnlocked(currentMap);
-
-        // The check for equipped status MUST use the scene name from the MapData object
         bool isEquipped = (GameDataManager.Instance.SelectedMapName == currentMap.sceneName);
-
-        if (mapNameText != null)
-        {
-            mapNameText.text = currentMap.mapName;
-        }
-
+        if (mapNameText != null) mapNameText.text = currentMap.mapName;
         if (mainActionButton != null && mainActionButtonText != null)
         {
             if (isUnlocked)
@@ -232,15 +196,35 @@ public class SceneAndMapShopManager : MonoBehaviour
 
     private void OnMainActionButtonClicked()
     {
+        // --- FIX: Added debug log to confirm the button click is registered ---
+        Debug.Log("[SceneAndMapShopManager] Main Action Button Clicked!");
+
         if (_currentMapIndex < 0) return;
         MapData currentMap = allMaps[_currentMapIndex];
-        if (IsMapUnlocked(currentMap)) { SelectMap(); } else { BuyMap(); }
+        if (IsMapUnlocked(currentMap))
+        {
+            SelectMap();
+        }
+        else
+        {
+            BuyMap();
+        }
     }
 
     private void BuyMap()
     {
+        Debug.Log("[SceneAndMapShopManager] Entering BuyMap() method...");
         MapData mapToBuy = allMaps[_currentMapIndex];
-        if (GameDataManager.Instance.SpendMoney(mapToBuy.price)) { UnlockMap(mapToBuy); UpdateUI(); }
+        if (GameDataManager.Instance.SpendMoney(mapToBuy.price))
+        {
+            Debug.Log($"[SceneAndMapShopManager] Purchase successful for '{mapToBuy.mapName}'!");
+            UnlockMap(mapToBuy);
+            UpdateUI();
+        }
+        else
+        {
+            Debug.LogWarning($"[SceneAndMapShopManager] Purchase failed for '{mapToBuy.mapName}'. Not enough money.");
+        }
     }
 
     private void SelectMap()

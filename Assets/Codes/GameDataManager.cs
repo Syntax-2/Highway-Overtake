@@ -83,11 +83,11 @@ public class GameDataManager : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    public void AddMoney(int amount)
+    public void AddMoney()
     {
-        if (amount <= 0) return;
-        PlayerMoney += amount;
-        TotalCoinsCollected += amount;
+        if (ScoreManager._score <= 0) return;
+        PlayerMoney += ScoreManager._score;
+        TotalCoinsCollected += ScoreManager._score;
         SaveMoney();
         OnMoneyChanged?.Invoke(PlayerMoney);
     }
